@@ -3,168 +3,123 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>СобериДиван — конструктор мягкой мебели</title>
+<title>Призма Мебель — конструктор мягкой мебели</title>
 <style>
+  :root {
+    --brand: #b5793c;
+    --brand-dark: #8a5a26;
+    --ink: #2b2b2b;
+    --muted: #888;
+    --line: #e5e1da;
+    --bg: #f6f4f0;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: #f6f4f0; color: #2b2b2b; min-height: 100vh;
-  }
-  header {
-    background: #fff; padding: 16px 32px; display: flex;
-    justify-content: space-between; align-items: center;
-    border-bottom: 1px solid #e5e1da; position: sticky; top: 0; z-index: 100;
-  }
-  header h1 { font-size: 20px; letter-spacing: -0.5px; }
-  header h1 span { color: #b5793c; }
-  nav a {
-    margin-left: 24px; color: #555; text-decoration: none; font-size: 14px;
-  }
-  nav a:hover { color: #b5793c; }
-
+  html { scroll-behavior: smooth; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+  
+  header { background: #fff; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 100; }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+  .logo-mark { width: 34px; height: 34px; background: var(--brand); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .logo-text { font-weight: 700; font-size: 19px; letter-spacing: -0.5px; }
+  .logo-text small { display: block; font-size: 10px; letter-spacing: 3px; color: var(--brand); font-weight: 600; }
+  
   .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+  .hero { background: linear-gradient(135deg, #fff 0%, #faf6ef 100%); border-radius: 20px; padding: 40px 32px; margin-bottom: 32px; border: 1px solid var(--line); text-align: center; }
+  .hero h1 { font-size: 34px; margin-bottom: 12px; }
+  .hero h1 span { color: var(--brand); }
+  .hero p { color: #666; font-size: 16px; }
 
-  /* Галерея */
-  .gallery { margin-bottom: 40px; }
-  .gallery h2 { font-size: 24px; margin-bottom: 16px; }
-  .gallery-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
-  }
-  .gallery-item {
-    background: #fff; border-radius: 12px; overflow: hidden;
-    cursor: pointer; transition: transform .2s, box-shadow .2s;
-    border: 1px solid #e5e1da;
-  }
-  .gallery-item:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.08); }
-  .gallery-thumb {
-    height: 180px; display: flex; align-items: center; justify-content: center;
-    font-size: 64px;
-  }
-  .gallery-item p { padding: 12px; font-size: 14px; text-align: center; }
+  .configurator { display: grid; grid-template-columns: 1fr 420px; gap: 24px; background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--line); margin-bottom: 40px; }
+  @media (max-width: 1000px) { .configurator { grid-template-columns: 1fr; padding: 12px; } }
 
-  /* Конструктор */
-  .configurator {
-    display: grid; grid-template-columns: 1fr 420px; gap: 24px;
-    background: #fff; border-radius: 16px; padding: 24px;
-    border: 1px solid #e5e1da;
-  }
-  @media (max-width: 1000px) { .configurator { grid-template-columns: 1fr; } }
-
-  #viewer {
-    background: linear-gradient(180deg, #faf9f7 0%, #eeebe5 100%);
-    border-radius: 12px; min-height: 500px; position: relative;
-    overflow: hidden;
-  }
-  .hint {
-    position: absolute; bottom: 12px; left: 12px;
-    font-size: 12px; color: #888; background: rgba(255,255,255,.8);
-    padding: 6px 10px; border-radius: 6px;
-  }
+  /* CSS 3D ВЬЮВЕР */
+  #viewer { background: linear-gradient(180deg, #faf9f7 0%, #eeebe5 100%); border-radius: 12px; min-height: 500px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; perspective: 1200px; }
+  .hint { position: absolute; bottom: 12px; left: 12px; font-size: 12px; color: #888; background: rgba(255,255,255,.85); padding: 6px 10px; border-radius: 6px; pointer-events: none; z-index: 10; }
+  .viewer-title { position: absolute; top: 12px; left: 12px; font-size: 13px; color: #666; background: rgba(255,255,255,.85); padding: 6px 10px; border-radius: 6px; z-index: 10; }
+  
+  .scene { width: 100%; height: 100%; position: absolute; transform-style: preserve-3d; transition: transform 0.1s ease-out; }
+  .sofa-container { position: absolute; left: 50%; top: 55%; transform-style: preserve-3d; transform: translate(-50%, -50%) rotateX(-20deg) rotateY(-30deg); }
+  
+  .face { position: absolute; background: #8e8e8e; border: 1px solid rgba(0,0,0,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
+  .top { transform: rotateX(90deg) translateZ(var(--h)); width: var(--w); height: var(--d); left: 0; top: calc(var(--d) / -2); }
+  .front { transform: rotateY(0deg) translateZ(calc(var(--d) / 2)); width: var(--w); height: var(--h); left: 0; top: calc(var(--h) / -2); }
+  .right { transform: rotateY(90deg) translateZ(calc(var(--w) / 2)); width: var(--d); height: var(--h); left: calc(var(--w) / -2 + var(--w) / 2); top: calc(var(--h) / -2); }
 
   .panel { display: flex; flex-direction: column; gap: 20px; overflow-y: auto; max-height: 700px; padding-right: 4px; }
-  .panel h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 10px; }
+  .panel h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
 
   .model-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .model-btn {
-    padding: 10px; border: 2px solid #e5e1da; background: #fff;
-    border-radius: 8px; cursor: pointer; font-size: 13px; transition: all .15s;
-  }
+  .model-btn { padding: 10px; border: 2px solid var(--line); background: #fff; border-radius: 8px; cursor: pointer; font-size: 13px; transition: all .15s; font-family: inherit; }
   .model-btn:hover { border-color: #c9b79a; }
-  .model-btn.active { border-color: #b5793c; background: #fdf6ee; color: #8a5a26; font-weight: 600; }
+  .model-btn.active { border-color: var(--brand); background: #fdf6ee; color: var(--brand-dark); font-weight: 600; }
 
+  .slider-group { margin-bottom: 12px; }
   .slider-group label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
-  .slider-group input[type=range] { width: 100%; accent-color: #b5793c; }
+  .slider-group label span { color: var(--brand); font-weight: 600; }
+  .slider-group input[type=range] { width: 100%; accent-color: var(--brand); }
 
   .color-grid { display: flex; gap: 8px; flex-wrap: wrap; }
-  .color-swatch {
-    width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
-    border: 3px solid transparent; transition: transform .15s;
-    position: relative;
-  }
+  .color-swatch { width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: transform .15s; }
   .color-swatch:hover { transform: scale(1.08); }
-  .color-swatch.active { border-color: #2b2b2b; box-shadow: 0 0 0 2px #fff inset; }
+  .color-swatch.active { border-color: var(--ink); box-shadow: 0 0 0 2px #fff inset; }
 
   .option-list { display: flex; flex-direction: column; gap: 6px; }
-  .option-btn {
-    padding: 10px 12px; border: 2px solid #e5e1da; background: #fff;
-    border-radius: 8px; cursor: pointer; font-size: 13px; text-align: left;
-    display: flex; justify-content: space-between; align-items: center;
-    transition: all .15s;
-  }
+  .option-btn { padding: 10px 12px; border: 2px solid var(--line); background: #fff; border-radius: 8px; cursor: pointer; font-size: 13px; text-align: left; display: flex; justify-content: space-between; align-items: center; transition: all .15s; font-family: inherit; width: 100%; }
   .option-btn:hover { border-color: #c9b79a; }
-  .option-btn.active { border-color: #b5793c; background: #fdf6ee; }
-  .option-btn .price-tag { color: #b5793c; font-size: 12px; font-weight: 600; }
+  .option-btn.active { border-color: var(--brand); background: #fdf6ee; }
+  .option-btn .price-tag { color: var(--brand); font-size: 12px; font-weight: 600; }
 
-  .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; font-size: 14px; }
-  .checkbox-row input { accent-color: #b5793c; width: 18px; height: 18px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; padding: 10px; font-size: 14px; cursor: pointer; border-radius: 8px; }
+  .checkbox-row:hover { background: #faf8f5; }
+  .checkbox-row input { accent-color: var(--brand); width: 18px; height: 18px; cursor: pointer; }
+  .checkbox-row .opt-price { margin-left: auto; color: var(--brand); font-size: 12px; font-weight: 600; }
 
-  /* Цена */
-  .price-box {
-    position: sticky; bottom: 0; background: #2b2b2b; color: #fff;
-    padding: 18px; border-radius: 12px; margin-top: auto;
-  }
+  .price-box { position: sticky; bottom: 0; background: var(--ink); color: #fff; padding: 18px; border-radius: 12px; margin-top: auto; }
   .price-total { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
   .price-breakdown { font-size: 12px; color: #aaa; line-height: 1.6; margin-bottom: 12px; }
-  .order-btn {
-    width: 100%; padding: 14px; background: #b5793c; color: #fff;
-    border: none; border-radius: 8px; font-size: 15px; font-weight: 600;
-    cursor: pointer; transition: background .15s;
-  }
-  .order-btn:hover { background: #a06a2f; }
+  .order-btn { width: 100%; padding: 14px; background: var(--brand); color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .15s; }
+  .order-btn:hover { background: var(--brand-dark); }
 
-  /* Модалка */
-  .modal-overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5);
-    z-index: 1000; align-items: center; justify-content: center; padding: 20px;
-  }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.open { display: flex; }
-  .modal {
-    background: #fff; border-radius: 16px; padding: 32px; max-width: 500px;
-    width: 100%; max-height: 90vh; overflow-y: auto;
-  }
+  .modal { background: #fff; border-radius: 16px; padding: 32px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
   .modal h2 { margin-bottom: 16px; font-size: 22px; }
-  .modal input, .modal textarea {
-    width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd;
-    border-radius: 8px; font-size: 14px; font-family: inherit;
-  }
+  .modal input, .modal textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; }
   .modal textarea { min-height: 80px; resize: vertical; }
-  .modal-summary { background: #f6f4f0; padding: 16px; border-radius: 8px; margin: 16px 0; font-size: 14px; line-height: 1.7; }
+  .modal-summary { background: var(--bg); padding: 16px; border-radius: 8px; margin: 16px 0; font-size: 13px; line-height: 1.7; }
   .modal-actions { display: flex; gap: 8px; }
-  .modal-actions button {
-    flex: 1; padding: 14px; border: none; border-radius: 8px;
-    font-size: 15px; font-weight: 600; cursor: pointer;
-  }
+  .modal-actions button { flex: 1; padding: 14px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
   .btn-cancel { background: #eee; color: #555; }
-  .btn-submit { background: #b5793c; color: #fff; }
-  .success-msg { text-align: center; padding: 20px; }
-  .success-msg .icon { font-size: 48px; margin-bottom: 12px; }
+  .btn-submit { background: var(--brand); color: #fff; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>🛋️ Собери<span>Диван</span></h1>
-  <nav>
-    <a href="#gallery">Галерея</a>
-    <a href="#configurator">Конструктор</a>
-    <a href="#">Доставка</a>
-    <a href="#">Контакты</a>
-  </nav>
+  <a class="logo" href="#">
+    <div class="logo-mark"></div>
+    <div class="logo-text">ПРИЗМА<small>МЕБЕЛЬ</small></div>
+  </a>
 </header>
 
 <div class="container">
-
-  <!-- Галерея -->
-  <section class="gallery" id="gallery">
-    <h2>Готовые работы</h2>
-    <div class="gallery-grid" id="galleryGrid"></div>
+  <section class="hero">
+    <h1>Соберите диван <span>своей мечты</span></h1>
+    <p>Выбирайте модель, размеры, ткань и наполнение — мы покажем цену и сошьём под вас.</p>
   </section>
 
-  <!-- Конструктор -->
-  <section class="configurator" id="configurator">
+  <section class="configurator">
     <div id="viewer">
-      <div class="hint">🖱️ Крутите мышкой • Зум колёсиком</div>
+      <div class="viewer-title" id="viewerTitle">Прямой диван «Осло»</div>
+      <div class="hint">🖱️ Зажмите и потяните мышкой, чтобы вращать</div>
+      
+      <!-- Контейнер для 3D-модели (на CSS) -->
+      <div class="scene" id="scene">
+        <div class="sofa-container" id="sofaContainer">
+          <!-- Модель будет генерироваться здесь -->
+        </div>
+      </div>
+      
     </div>
 
     <div class="panel">
@@ -176,15 +131,15 @@
       <div>
         <h3>Размеры</h3>
         <div class="slider-group">
-          <label>Ширина: <span id="wVal">220 см</span></label>
+          <label>Ширина <span id="wVal">220 см</span></label>
           <input type="range" id="width" min="160" max="320" step="10" value="220" />
         </div>
         <div class="slider-group">
-          <label>Глубина: <span id="dVal">95 см</span></label>
+          <label>Глубина <span id="dVal">95 см</span></label>
           <input type="range" id="depth" min="80" max="120" step="5" value="95" />
         </div>
         <div class="slider-group">
-          <label>Высота спинки: <span id="hVal">85 см</span></label>
+          <label>Высота спинки <span id="hVal">85 см</span></label>
           <input type="range" id="height" min="70" max="110" step="5" value="85" />
         </div>
       </div>
@@ -209,15 +164,15 @@
         <div class="option-list">
           <label class="checkbox-row">
             <input type="checkbox" id="optArms" checked />
-            Подлокотники <span style="margin-left:auto; color:#b5793c; font-size:12px;">+3 000 ₽</span>
+            Подлокотники <span class="opt-price">+3 000 ₽</span>
           </label>
           <label class="checkbox-row">
             <input type="checkbox" id="optMechanism" />
-            Механизм «еврокнижка» <span style="margin-left:auto; color:#b5793c; font-size:12px;">+12 000 ₽</span>
+            Механизм «еврокнижка» <span class="opt-price">+12 000 ₽</span>
           </label>
           <label class="checkbox-row">
             <input type="checkbox" id="optStorage" />
-            Ящик для белья <span style="margin-left:auto; color:#b5793c; font-size:12px;">+6 000 ₽</span>
+            Ящик для белья <span class="opt-price">+6 000 ₽</span>
           </label>
         </div>
       </div>
@@ -231,451 +186,332 @@
   </section>
 </div>
 
-<!-- Модалка оформления -->
 <div class="modal-overlay" id="orderModal">
-  <div class="modal" id="modalContent">
-    <h2>Оформление заказа</h2>
-    <input id="fName" placeholder="Имя" required />
-    <input id="fPhone" placeholder="Телефон" required />
-    <input id="fEmail" placeholder="Email" />
-    <textarea id="fAddress" placeholder="Адрес доставки"></textarea>
-    <div class="modal-summary" id="modalSummary"></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeOrder()">Отмена</button>
-      <button class="btn-submit" onclick="submitOrder()">Заказать</button>
-    </div>
-  </div>
+  <div class="modal" id="modalContent"></div>
 </div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
+<script>
 /* ============ ДАННЫЕ ============ */
-
 const MODELS = {
-  straight: { name: 'Прямой диван', base: 35000, wMin: 160, wMax: 320, wDef: 220 },
-  corner:   { name: 'Угловой диван', base: 52000, wMin: 200, wMax: 360, wDef: 280 },
-  armchair: { name: 'Кресло', base: 22000, wMin: 80,  wMax: 140, wDef: 100 },
-  sofaBed:  { name: 'Диван-кровать', base: 42000, wMin: 180, wMax: 300, wDef: 240 },
+  straight: { name: 'Прямой диван', fullName: 'Прямой диван «Осло»', base: 35000, wMin: 160, wMax: 320, wDef: 220 },
+  corner:   { name: 'Угловой диван', fullName: 'Угловой диван «Берген»', base: 52000, wMin: 200, wMax: 360, wDef: 280 },
+  armchair: { name: 'Кресло', fullName: 'Кресло «Токио»', base: 22000, wMin: 80,  wMax: 140, wDef: 100 },
+  sofaBed:  { name: 'Диван-кровать', fullName: 'Диван-кровать «Милан»', base: 42000, wMin: 180, wMax: 300, wDef: 240 },
 };
 
 const COLORS = [
-  { id: 'gray',    name: 'Серый',       hex: '#8e8e8e' },
-  { id: 'beige',   name: 'Бежевый',     hex: '#c9b79a' },
-  { id: 'navy',    name: 'Синий',       hex: '#34495e' },
-  { id: 'green',   name: 'Зелёный',     hex: '#5a7d5a' },
-  { id: 'brown',   name: 'Коричневый',  hex: '#6b4a2f' },
-  { id: 'burgundy',name: 'Бордовый',    hex: '#7a2e3b' },
-  { id: 'cream',   name: 'Кремовый',    hex: '#efe6d6' },
-  { id: 'black',   name: 'Чёрный',      hex: '#2b2b2b' },
+  { id: 'gray',     name: 'Серый',      hex: '#8e8e8e' },
+  { id: 'beige',    name: 'Бежевый',    hex: '#c9b79a' },
+  { id: 'navy',     name: 'Синий',      hex: '#34495e' },
+  { id: 'green',    name: 'Зелёный',    hex: '#5a7d5a' },
+  { id: 'brown',    name: 'Коричневый', hex: '#6b4a2f' },
+  { id: 'burgundy', name: 'Бордовый',   hex: '#7a2e3b' },
+  { id: 'cream',    name: 'Кремовый',   hex: '#efe6d6' },
+  { id: 'black',    name: 'Чёрный',     hex: '#2b2b2b' },
 ];
 
 const FABRICS = [
-  { id: 'rog',      name: 'Рогожка',        mult: 1.0 },
-  { id: 'velvet',   name: 'Велюр',          mult: 1.25 },
-  { id: 'chenille', name: 'Шенилл',         mult: 1.15 },
-  { id: 'leather',  name: 'Экокожа',        mult: 1.4 },
-  { id: 'linen',    name: 'Лён',            mult: 1.1 },
+  { id: 'rog',      name: 'Рогожка',  mult: 1.0 },
+  { id: 'velvet',   name: 'Велюр',    mult: 1.25 },
+  { id: 'chenille', name: 'Шенилл',   mult: 1.15 },
+  { id: 'leather',  name: 'Экокожа',  mult: 1.4 },
+  { id: 'linen',    name: 'Лён',      mult: 1.1 },
 ];
 
 const FILLERS = [
-  { id: 'ppu',     name: 'ППУ стандарт',              add: 0 },
-  { id: 'spring',  name: 'ППУ + пружины',             add: 4000 },
-  { id: 'memory',  name: 'Пружинный блок + память',   add: 9000 },
+  { id: 'ppu',    name: 'ППУ стандарт',            add: 0 },
+  { id: 'spring', name: 'ППУ + пружины',           add: 4000 },
+  { id: 'memory', name: 'Пружинный блок + память', add: 9000 },
 ];
 
 /* ============ СОСТОЯНИЕ ============ */
-
 const state = {
-  model: 'straight',
-  width: 220,
-  depth: 95,
-  height: 85,
-  color: 'gray',
-  fabric: 'rog',
-  filler: 'ppu',
-  arms: true,
-  mechanism: false,
-  storage: false,
+  model: 'straight', width: 220, depth: 95, height: 85,
+  color: 'gray', fabric: 'rog', filler: 'ppu',
+  arms: true, mechanism: false, storage: false,
 };
 
-/* ============ THREE.JS СЦЕНА ============ */
+/* ============ ВРАЩЕНИЕ 3D ============ */
+const scene = document.getElementById('scene');
+const sofaContainer = document.getElementById('sofaContainer');
+let isDragging = false;
+let prevX = 0, prevY = 0;
+let rotX = -20, rotY = -30;
 
-const viewer = document.getElementById('viewer');
-const scene = new THREE.Scene();
-scene.background = null;
+scene.addEventListener('mousedown', (e) => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+window.addEventListener('mouseup', () => isDragging = false);
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - prevX;
+  const dy = e.clientY - prevY;
+  rotY += dx * 0.5;
+  rotX -= dy * 0.5;
+  rotX = Math.max(-90, Math.min(90, rotX)); // Ограничение наклона
+  prevX = e.clientX; prevY = e.clientY;
+  updateViewer();
+});
 
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-camera.position.set(4, 3, 5);
-
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-viewer.appendChild(renderer.domElement);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.08;
-controls.minDistance = 3;
-controls.maxDistance = 12;
-controls.maxPolarAngle = Math.PI / 2.1;
-
-// Свет
-scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
-keyLight.position.set(5, 8, 6);
-keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(2048, 2048);
-keyLight.shadow.camera.left = -8;
-keyLight.shadow.camera.right = 8;
-keyLight.shadow.camera.top = 8;
-keyLight.shadow.camera.bottom = -8;
-scene.add(keyLight);
-
-const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
-fillLight.position.set(-5, 3, -4);
-scene.add(fillLight);
-
-// Пол
-const floorGeo = new THREE.CircleGeometry(8, 64);
-const floorMat = new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 });
-const floor = new THREE.Mesh(floorGeo, floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.receiveShadow = true;
-scene.add(floor);
-
-// Группа дивана
-const sofaGroup = new THREE.Group();
-scene.add(sofaGroup);
-
-function makeMaterial() {
-  const colorHex = COLORS.find(c => c.id === state.color).hex;
-  const fabricId = state.fabric;
-  const isLeather = fabricId === 'leather';
-  return new THREE.MeshStandardMaterial({
-    color: new THREE.Color(colorHex),
-    roughness: isLeather ? 0.35 : 0.85,
-    metalness: isLeather ? 0.05 : 0,
-  });
+function updateViewer() {
+  sofaContainer.style.transform = `translate(-50%, -50%) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
 }
 
-function createBox(w, h, d, mat) {
-  const geo = new THREE.BoxGeometry(w, h, d);
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  return mesh;
-}
-
-/* Пересобрать диван из примитивов */
+/* ============ 3D МОДЕЛЬ НА CSS ============ */
 function rebuildSofa() {
-  // Очистить
-  while (sofaGroup.children.length) {
-    const c = sofaGroup.children[0];
-    sofaGroup.remove(c);
-    if (c.geometry) c.geometry.dispose();
+  const colorHex = COLORS.find(c => c.id === state.color).hex;
+  const w = state.width * 0.8; // Масштабируем для экрана
+  const d = state.depth * 0.8;
+  const h = state.height * 0.8;
+  
+  const seatH = 35;
+  const seatD = d - 15;
+  const backH = h - seatH;
+  const armW = state.arms ? 20 : 0;
+  const innerW = w - armW * 2;
+
+  // Базовый стиль для всех блоков
+  const boxStyle = `background: ${colorHex}; box-shadow: inset 0 0 15px rgba(0,0,0,0.15), 2px 2px 5px rgba(0,0,0,0.1); border-radius: 4px;`;
+
+  let html = '';
+  
+  // Функция создания блока
+  function createBlock(x, y, z, bw, bh, bd) {
+    return `
+      <div style="position: absolute; width: ${bw}px; height: ${bh}px; transform: translate3d(${x}px, ${y}px, ${z}px); transform-style: preserve-3d;">
+        <!-- Передняя грань -->
+        <div style="position: absolute; width: ${bw}px; height: ${bh}px; transform: translateZ(${bd/2}px); ${boxStyle}"></div>
+        <!-- Задняя грань -->
+        <div style="position: absolute; width: ${bw}px; height: ${bh}px; transform: rotateY(180deg) translateZ(${bd/2}px); ${boxStyle}"></div>
+        <!-- Левая грань -->
+        <div style="position: absolute; width: ${bd}px; height: ${bh}px; left: ${-bd/2 + bw/2}px; transform: rotateY(-90deg) translateZ(${bw/2}px); ${boxStyle}"></div>
+        <!-- Правая грань -->
+        <div style="position: absolute; width: ${bd}px; height: ${bh}px; left: ${-bd/2 + bw/2}px; transform: rotateY(90deg) translateZ(${bw/2}px); ${boxStyle}"></div>
+        <!-- Верхняя грань -->
+        <div style="position: absolute; width: ${bw}px; height: ${bd}px; top: ${-bd/2 + bh/2}px; transform: rotateX(90deg) translateZ(${bh/2}px); ${boxStyle}; filter: brightness(1.1);"></div>
+        <!-- Нижняя грань -->
+        <div style="position: absolute; width: ${bw}px; height: ${bd}px; top: ${-bd/2 + bh/2}px; transform: rotateX(-90deg) translateZ(${bh/2}px); ${boxStyle}; filter: brightness(0.8);"></div>
+      </div>
+    `;
   }
 
-  const mat = makeMaterial();
-  const w = state.width / 100;    // метры
-  const d = state.depth / 100;
-  const h = state.height / 100;
-  const seatH = 0.42;
-  const seatThick = 0.18;
-  const armThick = 0.18;
-  const backThick = 0.18;
-
-  const isCorner = state.model === 'corner';
-
-  if (isCorner) {
-    // Угловой: L-образный — основная часть + боковая
+  if (state.model === 'corner') {
     const mainW = w * 0.62;
     const sideW = w - mainW;
+    
+    // Основная часть
+    html += createBlock(0, 0, 0, mainW, seatH, d); // База
+    html += createBlock(0, -seatH/2 - 20, 0, mainW, 40, d - 15); // Сиденье
+    html += createBlock(0, -seatH/2 - backH/2 - 10, -d/2 + 10, mainW, backH, 20); // Спинка
+    
+    // Боковая часть
+    html += createBlock(mainW/2 + sideW/2 - 5, 0, d*0.1, sideW, seatH, d*0.8); // База
+    html += createBlock(mainW/2 + sideW/2 - 5, -seatH/2 - 20, d*0.1, sideW, 40, d*0.8 - 15); // Сиденье
+    html += createBlock(mainW/2 + sideW/2 - 5, -seatH/2 - backH/2 - 10, d*0.1 - 10, sideW, backH, 20); // Спинка
 
-    // База основной части
-    const base = createBox(mainW, seatH - seatThick, d, mat);
-    base.position.set(-(sideW/2), (seatH - seatThick)/2, 0);
-    sofaGroup.add(base);
-
-    // Сиденье основной
-    const seat = createBox(mainW - 0.04, seatThick, d - 0.04, mat);
-    seat.position.set(-(sideW/2), seatH - seatThick/2, 0);
-    sofaGroup.add(seat);
-
-    // Спинка основной
-    const back = createBox(mainW, h - seatH, backThick, mat);
-    back.position.set(-(sideW/2), seatH + (h - seatH)/2, -d/2 + backThick/2);
-    sofaGroup.add(back);
-
-    // Боковая часть (перпендикулярно)
-    const sideBase = createBox(sideW, seatH - seatThick, d * 0.85, mat);
-    sideBase.position.set(mainW/2 - 0.02, (seatH - seatThick)/2, d * 0.1);
-    sofaGroup.add(sideBase);
-
-    const sideSeat = createBox(sideW - 0.04, seatThick, d * 0.85 - 0.04, mat);
-    sideSeat.position.set(mainW/2 - 0.02, seatH - seatThick/2, d * 0.1);
-    sofaGroup.add(sideSeat);
-
-    const sideBack = createBox(backThick, h - seatH, d * 0.85, mat);
-    sideBack.position.set(mainW/2 - backThick/2, seatH + (h - seatH)/2, d * 0.1);
-    sofaGroup.add(sideBack);
-
-    // Внешний подлокотник основной части (если включено)
-    if (state.arms) {
-      const arm = createBox(armThick, h * 0.55, d, mat);
-      arm.position.set(-mainW + armThick/2 - sideW/2, h * 0.55 / 2 + seatH - seatH, 0);
-      arm.position.y = (h * 0.55) / 2 + (seatH - h*0.55/2);
-      // проще: подлокотник от пола до высоты
-      arm.position.set(-mainW + armThick/2 - sideW/2, h * 0.55 / 2, 0);
-      sofaGroup.add(arm);
-    }
   } else {
-    // Прямой / кресло / диван-кровать
-    const armW = state.arms ? armThick : 0;
-    const innerW = w - armW * 2;
+    // Прямой диван / кресло
+    const baseY = seatH / 2;
+    html += createBlock(0, baseY, 0, w, seatH, d); // База
+    html += createBlock(0, 0, 5, innerW, 20, seatD); // Сиденье
+    html += createBlock(0, -backH/2, -d/2 + 10, innerW, backH, 20); // Спинка
 
-    // База (низ)
-    const base = createBox(w, seatH - seatThick, d, mat);
-    base.position.set(0, (seatH - seatThick)/2, 0);
-    sofaGroup.add(base);
-
-    // Сиденье
-    const seat = createBox(innerW - 0.04, seatThick, d - backThick - 0.04, mat);
-    seat.position.set(0, seatH - seatThick/2, backThick/2);
-    sofaGroup.add(seat);
-
-    // Спинка
-    const back = createBox(innerW, h - seatH, backThick, mat);
-    back.position.set(0, seatH + (h - seatH)/2, -d/2 + backThick/2);
-    sofaGroup.add(back);
-
-    // Подлокотники
     if (state.arms) {
-      const armL = createBox(armThick, h * 0.65, d, mat);
-      armL.position.set(-w/2 + armThick/2, (h * 0.65)/2, 0);
-      sofaGroup.add(armL);
-
-      const armR = createBox(armThick, h * 0.65, d, mat);
-      armR.position.set(w/2 - armThick/2, (h * 0.65)/2, 0);
-      sofaGroup.add(armR);
+      html += createBlock(-w/2 + armW/2, -15, 0, armW, 60, d); // Левый подлокотник
+      html += createBlock(w/2 - armW/2, -15, 0, armW, 60, d); // Правый подлокотник
     }
   }
 
-  // Декоративные подушки на спинке
-  const pillowMat = makeMaterial();
-  pillowMat.color.offsetHSL(0, 0, 0.06);
-  const pillowW = 0.38;
-  const pillowCount = state.model === 'armchair' ? 1 : 2;
-  const pillowStartX = state.model === 'corner' ? -(w*0.3) : (state.arms ? -(w/2 - 0.4) : -(w/2 - 0.25));
-  for (let i = 0; i < pillowCount; i++) {
-    const pillow = createBox(pillowW, 0.32, 0.12, pillowMat);
-    pillow.position.set(
-      pillowStartX + i * (pillowW + 0.15),
-      seatH + 0.22,
-      -d/2 + backThick + 0.08
-    );
-    pillow.rotation.x = 0.15;
-    sofaGroup.add(pillow);
+  // Подушки на спинке
+  if (state.model !== 'armchair') {
+    const pillowW = 40;
+    const pX = state.model === 'corner' ? -w*0.2 : (state.arms ? -w/2 + armW + 30 : -w/2 + 30);
+    for (let i = 0; i < 2; i++) {
+      html += createBlock(pX + i * (pillowW + 10), -seatH/2 - 20, -d/2 + 25, pillowW, 30, 15);
+    }
   }
 
-  // Центрируем всю группу
-  sofaGroup.position.set(0, 0, 0);
+  sofaContainer.innerHTML = html;
 }
 
-/* ============ РАСЧЁТ ЦЕНЫ ============ */
-
+/* ============ ЦЕНА ============ */
 function calculatePrice() {
   const model = MODELS[state.model];
   const fabric = FABRICS.find(f => f.id === state.fabric);
   const filler = FILLERS.find(f => f.id === state.filler);
 
-  // Базовая
-  let base = model.base;
-
-  // Размер: надбавка за см ширины и глубины сверх дефолта
-  const wExtra = (state.width - model.wDef) * 80;
-  const dExtra = (state.depth - 95) * 150;
-  const hExtra = (state.height - 85) * 100;
-  const sizeAdd = Math.max(wExtra, 0) + Math.max(dExtra, 0) + Math.max(hExtra, 0);
-
-  // Множитель ткани применяется к базе+размеру
-  const fabricMult = fabric.mult;
+  const base = model.base;
+  const sizeAdd = Math.max((state.width - model.wDef) * 80, 0) + 
+                  Math.max((state.depth - 95) * 150, 0) + 
+                  Math.max((state.height - 85) * 100, 0);
+  
   const beforeFabric = base + sizeAdd;
-  const afterFabric = beforeFabric * fabricMult;
-  const fabricAdd = afterFabric - beforeFabric;
+  const afterFabric = beforeFabric * fabric.mult;
+  const fabricAdd = Math.round(afterFabric - beforeFabric);
 
-  // Наполнение
-  const fillerAdd = filler.add;
+  const total = Math.round(afterFabric + filler.add + 
+                (state.arms ? 3000 : 0) + 
+                (state.mechanism ? 12000 : 0) + 
+                (state.storage ? 6000 : 0));
 
-  // Опции
-  let armsAdd = 0;
-  let mechAdd = 0;
-  let storageAdd = 0;
-  if (state.arms) armsAdd = 3000;
-  if (state.mechanism) mechAdd = 12000;
-  if (state.storage) storageAdd = 6000;
-
-  const total = Math.round(afterFabric + fillerAdd + armsAdd + mechAdd + storageAdd);
-
-  return {
-    base,
-    sizeAdd,
-    fabricAdd,
-    fillerAdd,
-    armsAdd,
-    mechAdd,
-    storageAdd,
-    total,
-  };
+  return { base, sizeAdd, fabricAdd, fillerAdd: filler.add, 
+           armsAdd: state.arms ? 3000 : 0, mechAdd: state.mechanism ? 12000 : 0, 
+           storageAdd: state.storage ? 6000 : 0, total };
 }
 
 function renderPrice() {
   const p = calculatePrice();
   document.getElementById('totalPrice').textContent = p.total.toLocaleString('ru-RU') + ' ₽';
+  
+  let b = [`Базовая: ${p.base.toLocaleString('ru-RU')} ₽`];
+  if (p.sizeAdd > 0) b.push(`Размер: +${p.sizeAdd.toLocaleString('ru-RU')} ₽`);
+  if (p.fabricAdd > 0) b.push(`Ткань: +${p.fabricAdd.toLocaleString('ru-RU')} ₽`);
+  if (p.fillerAdd > 0) b.push(`Наполнение: +${p.fillerAdd.toLocaleString('ru-RU')} ₽`);
+  if (p.armsAdd > 0) b.push(`Подлокотники: +${p.armsAdd.toLocaleString('ru-RU')} ₽`);
+  if (p.mechAdd > 0) b.push(`Механизм: +${p.mechAdd.toLocaleString('ru-RU')} ₽`);
+  if (p.storageAdd > 0) b.push(`Ящик: +${p.storageAdd.toLocaleString('ru-RU')} ₽`);
 
-  const breakdown = [];
-  breakdown.push(`Базовая модель: ${p.base.toLocaleString('ru-RU')} ₽`);
-  if (p.sizeAdd > 0) breakdown.push(`Увеличение размера: +${p.sizeAdd.toLocaleString('ru-RU')} ₽`);
-  if (p.fabricAdd !== 0) breakdown.push(`Ткань: ${p.fabricAdd > 0 ? '+' : ''}${p.fabricAdd.toLocaleString('ru-RU')} ₽`);
-  if (p.fillerAdd > 0) breakdown.push(`Наполнение: +${p.fillerAdd.toLocaleString('ru-RU')} ₽`);
-  if (p.armsAdd > 0) breakdown.push(`Подлокотники: +${p.armsAdd.toLocaleString('ru-RU')} ₽`);
-  if (p.mechAdd > 0) breakdown.push(`Механизм: +${p.mechAdd.toLocaleString('ru-RU')} ₽`);
-  if (p.storageAdd > 0) breakdown.push(`Ящик: +${p.storageAdd.toLocaleString('ru-RU')} ₽`);
-
-  document.getElementById('breakdown').innerHTML = breakdown.join('<br>');
+  document.getElementById('breakdown').innerHTML = b.join('<br>');
 }
 
 /* ============ UI РЕНДЕР ============ */
-
-function renderModelSelector() {
-  const container = document.getElementById('modelSelector');
-  container.innerHTML = '';
+function renderUI() {
+  // Модели
+  const mCont = document.getElementById('modelSelector');
+  mCont.innerHTML = '';
   Object.entries(MODELS).forEach(([id, m]) => {
     const btn = document.createElement('button');
     btn.className = 'model-btn' + (state.model === id ? ' active' : '');
     btn.textContent = m.name;
     btn.onclick = () => {
       state.model = id;
-      // Обновить диапазон ширины
       const wInput = document.getElementById('width');
-      wInput.min = m.wMin;
-      wInput.max = m.wMax;
+      wInput.min = m.wMin; wInput.max = m.wMax;
       state.width = Math.min(Math.max(state.width, m.wMin), m.wMax);
       wInput.value = state.width;
       document.getElementById('wVal').textContent = state.width + ' см';
-
-      renderModelSelector();
-      rebuildSofa();
-      renderPrice();
+      document.getElementById('viewerTitle').textContent = m.fullName;
+      renderUI(); rebuildSofa(); renderPrice();
     };
-    container.appendChild(btn);
+    mCont.appendChild(btn);
   });
-}
 
-function renderColors() {
-  const container = document.getElementById('colorGrid');
-  container.innerHTML = '';
+  // Цвета
+  const cCont = document.getElementById('colorGrid');
+  cCont.innerHTML = '';
   COLORS.forEach(c => {
     const sw = document.createElement('div');
     sw.className = 'color-swatch' + (state.color === c.id ? ' active' : '');
     sw.style.background = c.hex;
     sw.title = c.name;
-    sw.onclick = () => {
-      state.color = c.id;
-      renderColors();
-      rebuildSofa();
-    };
-    container.appendChild(sw);
+    sw.onclick = () => { state.color = c.id; renderUI(); rebuildSofa(); };
+    cCont.appendChild(sw);
   });
-}
 
-function renderFabricList() {
-  const container = document.getElementById('fabricList');
-  container.innerHTML = '';
+  // Ткани
+  const fCont = document.getElementById('fabricList');
+  fCont.innerHTML = '';
   FABRICS.forEach(f => {
     const btn = document.createElement('button');
     btn.className = 'option-btn' + (state.fabric === f.id ? ' active' : '');
-    const priceLabel = f.mult === 1 ? 'базовая' : `×${f.mult}`;
-    btn.innerHTML = `<span>${f.name}</span><span class="price-tag">${priceLabel}</span>`;
-    btn.onclick = () => {
-      state.fabric = f.id;
-      renderFabricList();
-      rebuildSofa();
-      renderPrice();
-    };
-    container.appendChild(btn);
+    btn.innerHTML = `<span>${f.name}</span><span class="price-tag">${f.mult === 1 ? 'базовая' : '×'+f.mult}</span>`;
+    btn.onclick = () => { state.fabric = f.id; renderUI(); rebuildSofa(); renderPrice(); };
+    fCont.appendChild(btn);
   });
-}
 
-function renderFillerList() {
-  const container = document.getElementById('fillerList');
-  container.innerHTML = '';
+  // Наполнение
+  const fillCont = document.getElementById('fillerList');
+  fillCont.innerHTML = '';
   FILLERS.forEach(f => {
     const btn = document.createElement('button');
     btn.className = 'option-btn' + (state.filler === f.id ? ' active' : '');
-    const priceLabel = f.add === 0 ? 'включено' : `+${f.add.toLocaleString('ru-RU')} ₽`;
-    btn.innerHTML = `<span>${f.name}</span><span class="price-tag">${priceLabel}</span>`;
-    btn.onclick = () => {
-      state.filler = f.id;
-      renderFillerList();
-      renderPrice();
-    };
-    container.appendChild(btn);
+    btn.innerHTML = `<span>${f.name}</span><span class="price-tag">${f.add === 0 ? 'включено' : '+'+f.add.toLocaleString('ru-RU')+' ₽'}</span>`;
+    btn.onclick = () => { state.filler = f.id; renderUI(); renderPrice(); };
+    fillCont.appendChild(btn);
   });
 }
 
-function renderGallery() {
-  const items = [
-    { emoji: '🛋️', title: 'Прямой диван «Осло»', bg: '#8e8e8e' },
-    { emoji: '🛋️', title: 'Угловой «Берген»', bg: '#c9b79a' },
-    { emoji: '🪑', title: 'Кресло «Токио»', bg: '#34495e' },
-    { emoji: '🛏️', title: 'Диван-кровать «Милан»', bg: '#5a7d5a' },
-    { emoji: '🛋️', title: 'Прямой «Виченца»', bg: '#6b4a2f' },
-    { emoji: '🛋️', title: 'Угловой «Флоренция»', bg: '#7a2e3b' },
-    { emoji: '🪑', title: 'Кресло «Лиссабон»', bg: '#efe6d6' },
-    { emoji: '🛏️', title: 'Диван-кровать «Прага»', bg: '#2b2b2b' },
-  ];
-  const container = document.getElementById('galleryGrid');
-  container.innerHTML = items.map(it => `
-    <div class="gallery-item" onclick="document.getElementById('configurator').scrollIntoView({behavior:'smooth'})">
-      <div class="gallery-thumb" style="background:${it.bg}">${it.emoji}</div>
-      <p>${it.title}</p>
-    </div>
-  `).join('');
-}
-
-/* ============ ОБРАБОТЧИКИ ============ */
-
+/* ============ СОБЫТИЯ ============ */
 document.getElementById('width').addEventListener('input', e => {
   state.width = +e.target.value;
   document.getElementById('wVal').textContent = state.width + ' см';
-  rebuildSofa();
-  renderPrice();
+  rebuildSofa(); renderPrice();
 });
-
 document.getElementById('depth').addEventListener('input', e => {
   state.depth = +e.target.value;
   document.getElementById('dVal').textContent = state.depth + ' см';
-  rebuildSofa();
-  renderPrice();
+  rebuildSofa(); renderPrice();
 });
-
 document.getElementById('height').addEventListener('input', e => {
   state.height = +e.target.value;
   document.getElementById('hVal').textContent = state.height + ' см';
-  rebuildSofa();
-  renderPrice();
+  rebuildSofa(); renderPrice();
+});
+document.getElementById('optArms').addEventListener('change', e => {
+  state.arms = e.target.checked; rebuildSofa(); renderPrice();
+});
+document.getElementById('optMechanism').addEventListener('change', e => {
+  state.mechanism = e.target.checked; renderPrice();
+});
+document.getElementById('optStorage').addEventListener('change', e => {
+  state.storage = e.target.checked; renderPrice();
 });
 
-document.getElementById('optArms').
+/* ============ МОДАЛКА ============ */
+const modal = document.getElementById('orderModal');
+const modalContent = document.getElementById('modalContent');
+
+window.openOrder = function() {
+  const p = calculatePrice();
+  const model = MODELS[state.model];
+  const color = COLORS.find(c => c.id === state.color);
+  
+  modalContent.innerHTML = `
+    <h2>Оформление заказа</h2>
+    <input id="fName" placeholder="Имя" />
+    <input id="fPhone" placeholder="Телефон" />
+    <input id="fEmail" placeholder="Email (необязательно)" />
+    <textarea id="fAddress" placeholder="Адрес доставки"></textarea>
+    
+    <div class="modal-summary">
+      <div><b>Модель:</b> ${model.fullName}</div>
+      <div><b>Размер:</b> ${state.width}×${state.depth}×${state.height} см</div>
+      <div><b>Цвет:</b> ${color.name}</div>
+      <div><b>Итого:</b> ${p.total.toLocaleString('ru-RU')} ₽</div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('orderModal').classList.remove('open')">Отмена</button>
+      <button class="btn-submit" onclick="submitOrder()">Заказать</button>
+    </div>
+  `;
+  modal.classList.add('open');
+};
+
+window.submitOrder = function() {
+  const name = document.getElementById('fName').value;
+  const phone = document.getElementById('fPhone').value;
+  
+  if (!name || !phone) { alert('Пожалуйста, заполните имя и телефон'); return; }
+  
+  const p = calculatePrice();
+  const orderId = 'ПРЗ-' + Date.now().toString().slice(-6);
+  
+  modalContent.innerHTML = `
+    <div style="text-align: center; padding: 20px;">
+      <div style="font-size: 56px; margin-bottom: 12px;">✅</div>
+      <h2>Спасибо, ${name}!</h2>
+      <p>Ваш заказ принят в работу.</p>
+      <div style="color: var(--brand); font-weight: 700; font-size: 18px; margin: 12px 0;">Заказ ${orderId}</div>
+      <p>Менеджер Призма Мебель свяжется с вами по номеру <b>${phone}</b> в течение 30 минут.</p>
+      <button class="btn-submit" style="margin-top: 20px; width: 100%;" onclick="document.getElementById('orderModal').classList.remove('open')">Готово</button>
+    </div>
+  `;
+};
+
+/* ============ ИНИЦИАЛИЗАЦИЯ ============ */
+renderUI();
+rebuildSofa();
+renderPrice();
+updateViewer();
+</script>
+</body>
+</html>
