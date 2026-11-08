@@ -5,14 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Призма Мебель — конструктор мягкой мебели</title>
 <style>
-  :root {
-    --brand: #b5793c;
-    --brand-dark: #8a5a26;
-    --ink: #2b2b2b;
-    --muted: #888;
-    --line: #e5e1da;
-    --bg: #f6f4f0;
-  }
+  :root { --brand: #b5793c; --brand-dark: #8a5a26; --ink: #2b2b2b; --muted: #888; --line: #e5e1da; --bg: #f6f4f0; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
@@ -32,19 +25,10 @@
   .configurator { display: grid; grid-template-columns: 1fr 420px; gap: 24px; background: #fff; border-radius: 16px; padding: 24px; border: 1px solid var(--line); margin-bottom: 40px; }
   @media (max-width: 1000px) { .configurator { grid-template-columns: 1fr; padding: 12px; } }
 
-  /* CSS 3D ВЬЮВЕР */
-  #viewer { background: linear-gradient(180deg, #faf9f7 0%, #eeebe5 100%); border-radius: 12px; min-height: 500px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; perspective: 1200px; }
+  #viewer { background: linear-gradient(180deg, #faf9f7 0%, #eeebe5 100%); border-radius: 12px; min-height: 500px; position: relative; overflow: hidden; }
   .hint { position: absolute; bottom: 12px; left: 12px; font-size: 12px; color: #888; background: rgba(255,255,255,.85); padding: 6px 10px; border-radius: 6px; pointer-events: none; z-index: 10; }
   .viewer-title { position: absolute; top: 12px; left: 12px; font-size: 13px; color: #666; background: rgba(255,255,255,.85); padding: 6px 10px; border-radius: 6px; z-index: 10; }
   
-  .scene { width: 100%; height: 100%; position: absolute; transform-style: preserve-3d; transition: transform 0.1s ease-out; }
-  .sofa-container { position: absolute; left: 50%; top: 55%; transform-style: preserve-3d; transform: translate(-50%, -50%) rotateX(-20deg) rotateY(-30deg); }
-  
-  .face { position: absolute; background: #8e8e8e; border: 1px solid rgba(0,0,0,0.1); box-shadow: inset 0 0 20px rgba(0,0,0,0.05); }
-  .top { transform: rotateX(90deg) translateZ(var(--h)); width: var(--w); height: var(--d); left: 0; top: calc(var(--d) / -2); }
-  .front { transform: rotateY(0deg) translateZ(calc(var(--d) / 2)); width: var(--w); height: var(--h); left: 0; top: calc(var(--h) / -2); }
-  .right { transform: rotateY(90deg) translateZ(calc(var(--w) / 2)); width: var(--d); height: var(--h); left: calc(var(--w) / -2 + var(--w) / 2); top: calc(var(--h) / -2); }
-
   .panel { display: flex; flex-direction: column; gap: 20px; overflow-y: auto; max-height: 700px; padding-right: 4px; }
   .panel h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 10px; font-weight: 700; }
 
@@ -111,15 +95,7 @@
   <section class="configurator">
     <div id="viewer">
       <div class="viewer-title" id="viewerTitle">Прямой диван «Осло»</div>
-      <div class="hint">🖱️ Зажмите и потяните мышкой, чтобы вращать</div>
-      
-      <!-- Контейнер для 3D-модели (на CSS) -->
-      <div class="scene" id="scene">
-        <div class="sofa-container" id="sofaContainer">
-          <!-- Модель будет генерироваться здесь -->
-        </div>
-      </div>
-      
+      <div class="hint">🖱️ Зажмите мышкой для вращения</div>
     </div>
 
     <div class="panel">
@@ -190,7 +166,21 @@
   <div class="modal" id="modalContent"></div>
 </div>
 
-<script>
+<!-- Подключаем Three.js -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
 /* ============ ДАННЫЕ ============ */
 const MODELS = {
   straight: { name: 'Прямой диван', fullName: 'Прямой диван «Осло»', base: 35000, wMin: 160, wMax: 320, wDef: 220 },
@@ -231,105 +221,181 @@ const state = {
   arms: true, mechanism: false, storage: false,
 };
 
-/* ============ ВРАЩЕНИЕ 3D ============ */
-const scene = document.getElementById('scene');
-const sofaContainer = document.getElementById('sofaContainer');
-let isDragging = false;
-let prevX = 0, prevY = 0;
-let rotX = -20, rotY = -30;
+/* ============ THREE.JS СЦЕНА ============ */
+const viewer = document.getElementById('viewer');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf4f1ea); // Фон вьювера
 
-scene.addEventListener('mousedown', (e) => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
-window.addEventListener('mouseup', () => isDragging = false);
-window.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
-  const dx = e.clientX - prevX;
-  const dy = e.clientY - prevY;
-  rotY += dx * 0.5;
-  rotX -= dy * 0.5;
-  rotX = Math.max(-90, Math.min(90, rotX)); // Ограничение наклона
-  prevX = e.clientX; prevY = e.clientY;
-  updateViewer();
-});
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+camera.position.set(4, 3, 5);
 
-function updateViewer() {
-  sofaContainer.style.transform = `translate(-50%, -50%) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+viewer.appendChild(renderer.domElement);
+renderer.domElement.style.borderRadius = '12px';
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 2;
+controls.maxDistance = 15;
+controls.maxPolarAngle = Math.PI / 2.1; // Запрет вращения под пол
+controls.target.set(0, 0.4, 0);
+
+// Свет
+scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
+keyLight.position.set(5, 8, 6);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(2048, 2048);
+keyLight.shadow.camera.left = -8;
+keyLight.shadow.camera.right = 8;
+keyLight.shadow.camera.top = 8;
+keyLight.shadow.camera.bottom = -8;
+scene.add(keyLight);
+
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+fillLight.position.set(-5, 3, -4);
+scene.add(fillLight);
+
+// Пол
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(10, 64),
+  new THREE.MeshStandardMaterial({ color: 0xe8e4dc, roughness: 0.9 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const sofaGroup = new THREE.Group();
+scene.add(sofaGroup);
+
+function makeMaterial(lighten = 0) {
+  const colorHex = COLORS.find(c => c.id === state.color).hex;
+  const isLeather = state.fabric === 'leather';
+  const mat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(colorHex),
+    roughness: isLeather ? 0.35 : 0.9,
+    metalness: isLeather ? 0.05 : 0,
+  });
+  if (lighten) mat.color.offsetHSL(0, 0, lighten);
+  return mat;
 }
 
-/* ============ 3D МОДЕЛЬ НА CSS ============ */
+// Используем RoundedBox для мягких сглаженных углов (как у настоящей мебели)
+function createSoftBox(w, h, d, mat) {
+  const geo = new RoundedBoxGeometry(w, h, d, 4, 0.05);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  return mesh;
+}
+
 function rebuildSofa() {
-  const colorHex = COLORS.find(c => c.id === state.color).hex;
-  const w = state.width * 0.8; // Масштабируем для экрана
-  const d = state.depth * 0.8;
-  const h = state.height * 0.8;
-  
-  const seatH = 35;
-  const seatD = d - 15;
-  const backH = h - seatH;
-  const armW = state.arms ? 20 : 0;
-  const innerW = w - armW * 2;
-
-  // Базовый стиль для всех блоков
-  const boxStyle = `background: ${colorHex}; box-shadow: inset 0 0 15px rgba(0,0,0,0.15), 2px 2px 5px rgba(0,0,0,0.1); border-radius: 4px;`;
-
-  let html = '';
-  
-  // Функция создания блока
-  function createBlock(x, y, z, bw, bh, bd) {
-    return `
-      <div style="position: absolute; width: ${bw}px; height: ${bh}px; transform: translate3d(${x}px, ${y}px, ${z}px); transform-style: preserve-3d;">
-        <!-- Передняя грань -->
-        <div style="position: absolute; width: ${bw}px; height: ${bh}px; transform: translateZ(${bd/2}px); ${boxStyle}"></div>
-        <!-- Задняя грань -->
-        <div style="position: absolute; width: ${bw}px; height: ${bh}px; transform: rotateY(180deg) translateZ(${bd/2}px); ${boxStyle}"></div>
-        <!-- Левая грань -->
-        <div style="position: absolute; width: ${bd}px; height: ${bh}px; left: ${-bd/2 + bw/2}px; transform: rotateY(-90deg) translateZ(${bw/2}px); ${boxStyle}"></div>
-        <!-- Правая грань -->
-        <div style="position: absolute; width: ${bd}px; height: ${bh}px; left: ${-bd/2 + bw/2}px; transform: rotateY(90deg) translateZ(${bw/2}px); ${boxStyle}"></div>
-        <!-- Верхняя грань -->
-        <div style="position: absolute; width: ${bw}px; height: ${bd}px; top: ${-bd/2 + bh/2}px; transform: rotateX(90deg) translateZ(${bh/2}px); ${boxStyle}; filter: brightness(1.1);"></div>
-        <!-- Нижняя грань -->
-        <div style="position: absolute; width: ${bw}px; height: ${bd}px; top: ${-bd/2 + bh/2}px; transform: rotateX(-90deg) translateZ(${bh/2}px); ${boxStyle}; filter: brightness(0.8);"></div>
-      </div>
-    `;
+  // Очистка
+  while (sofaGroup.children.length) {
+    const c = sofaGroup.children[0];
+    sofaGroup.remove(c);
+    if (c.geometry) c.geometry.dispose();
   }
+
+  const mat = makeMaterial();
+  const w = state.width / 100;
+  const d = state.depth / 100;
+  const h = state.height / 100;
+  const seatH = 0.42;
+  const seatThick = 0.20;
+  const armThick = 0.20;
+  const backThick = 0.20;
 
   if (state.model === 'corner') {
-    const mainW = w * 0.62;
+    const mainW = w * 0.65;
     const sideW = w - mainW;
-    
-    // Основная часть
-    html += createBlock(0, 0, 0, mainW, seatH, d); // База
-    html += createBlock(0, -seatH/2 - 20, 0, mainW, 40, d - 15); // Сиденье
-    html += createBlock(0, -seatH/2 - backH/2 - 10, -d/2 + 10, mainW, backH, 20); // Спинка
-    
-    // Боковая часть
-    html += createBlock(mainW/2 + sideW/2 - 5, 0, d*0.1, sideW, seatH, d*0.8); // База
-    html += createBlock(mainW/2 + sideW/2 - 5, -seatH/2 - 20, d*0.1, sideW, 40, d*0.8 - 15); // Сиденье
-    html += createBlock(mainW/2 + sideW/2 - 5, -seatH/2 - backH/2 - 10, d*0.1 - 10, sideW, backH, 20); // Спинка
 
-  } else {
-    // Прямой диван / кресло
-    const baseY = seatH / 2;
-    html += createBlock(0, baseY, 0, w, seatH, d); // База
-    html += createBlock(0, 0, 5, innerW, 20, seatD); // Сиденье
-    html += createBlock(0, -backH/2, -d/2 + 10, innerW, backH, 20); // Спинка
+    // Основная часть
+    const base = createSoftBox(mainW, seatH - seatThick, d, mat);
+    base.position.set(-(sideW / 2), (seatH - seatThick) / 2, 0);
+    sofaGroup.add(base);
+
+    const seat = createSoftBox(mainW - 0.04, seatThick, d - 0.04, mat);
+    seat.position.set(-(sideW / 2), seatH - seatThick / 2, 0);
+    sofaGroup.add(seat);
+
+    const back = createSoftBox(mainW, h - seatH, backThick, mat);
+    back.position.set(-(sideW / 2), seatH + (h - seatH) / 2, -d / 2 + backThick / 2);
+    sofaGroup.add(back);
+
+    // Боковая часть (угловая)
+    const sideBase = createSoftBox(sideW, seatH - seatThick, d * 0.85, mat);
+    sideBase.position.set(mainW / 2 - 0.02, (seatH - seatThick) / 2, d * 0.1);
+    sofaGroup.add(sideBase);
+
+    const sideSeat = createSoftBox(sideW - 0.04, seatThick, d * 0.85 - 0.04, mat);
+    sideSeat.position.set(mainW / 2 - 0.02, seatH - seatThick / 2, d * 0.1);
+    sofaGroup.add(sideSeat);
+
+    const sideBack = createSoftBox(backThick, h - seatH, d * 0.85, mat);
+    sideBack.position.set(mainW / 2 - backThick / 2, seatH + (h - seatH) / 2, d * 0.1);
+    sofaGroup.add(sideBack);
 
     if (state.arms) {
-      html += createBlock(-w/2 + armW/2, -15, 0, armW, 60, d); // Левый подлокотник
-      html += createBlock(w/2 - armW/2, -15, 0, armW, 60, d); // Правый подлокотник
+      const arm = createSoftBox(armThick, h * 0.55, d, mat);
+      arm.position.set(-mainW + armThick / 2 - sideW / 2, h * 0.55 / 2, 0);
+      sofaGroup.add(arm);
+    }
+  } else {
+    const armW = state.arms ? armThick : 0;
+    const innerW = w - armW * 2;
+
+    const base = createSoftBox(w, seatH - seatThick, d, mat);
+    base.position.set(0, (seatH - seatThick) / 2, 0);
+    sofaGroup.add(base);
+
+    const seat = createSoftBox(innerW - 0.04, seatThick, d - backThick - 0.04, mat);
+    seat.position.set(0, seatH - seatThick / 2, backThick / 2);
+    sofaGroup.add(seat);
+
+    const back = createSoftBox(innerW, h - seatH, backThick, mat);
+    back.position.set(0, seatH + (h - seatH) / 2, -d / 2 + backThick / 2);
+    sofaGroup.add(back);
+
+    if (state.arms) {
+      const armL = createSoftBox(armThick, h * 0.65, d, mat);
+      armL.position.set(-w / 2 + armThick / 2, (h * 0.65) / 2, 0);
+      sofaGroup.add(armL);
+
+      const armR = createSoftBox(armThick, h * 0.65, d, mat);
+      armR.position.set(w / 2 - armThick / 2, (h * 0.65) / 2, 0);
+      sofaGroup.add(armR);
     }
   }
 
-  // Подушки на спинке
-  if (state.model !== 'armchair') {
-    const pillowW = 40;
-    const pX = state.model === 'corner' ? -w*0.2 : (state.arms ? -w/2 + armW + 30 : -w/2 + 30);
-    for (let i = 0; i < 2; i++) {
-      html += createBlock(pX + i * (pillowW + 10), -seatH/2 - 20, -d/2 + 25, pillowW, 30, 15);
-    }
+  // Декоративные подушки на спинке
+  const pillowMat = makeMaterial(0.08); // чуть светлее
+  const pillowW = 0.38;
+  const pillowCount = state.model === 'armchair' ? 1 : 2;
+  const pillowStartX = state.model === 'corner'
+    ? -(state.width / 100 * 0.3)
+    : (state.arms ? -(state.width / 100 / 2 - 0.4) : -(state.width / 100 / 2 - 0.25));
+
+  for (let i = 0; i < pillowCount; i++) {
+    const pillow = createSoftBox(pillowW, 0.32, 0.12, pillowMat);
+    pillow.position.set(
+      pillowStartX + i * (pillowW + 0.15),
+      seatH + 0.22,
+      -d / 2 + backThick + 0.08
+    );
+    pillow.rotation.x = 0.15; // Легкий наклон подушки
+    sofaGroup.add(pillow);
   }
 
-  sofaContainer.innerHTML = html;
+  // Автоматическая подстройка камеры под размеры дивана
+  const camDist = Math.max(w, d) * 1.8 + 2;
+  camera.position.set(camDist * 0.6, camDist * 0.5, camDist * 0.8);
+  controls.target.set(0, h * 0.4, 0);
+  controls.update();
 }
 
 /* ============ ЦЕНА ============ */
@@ -372,7 +438,7 @@ function renderPrice() {
   document.getElementById('breakdown').innerHTML = b.join('<br>');
 }
 
-/* ============ UI РЕНДЕР ============ */
+/* ============ UI ============ */
 function renderUI() {
   // Модели
   const mCont = document.getElementById('modelSelector');
@@ -507,11 +573,26 @@ window.submitOrder = function() {
   `;
 };
 
-/* ============ ИНИЦИАЛИЗАЦИЯ ============ */
+/* ============ ИНИЦИАЛИЗАЦИЯ И АДАПТАЦИЯ ============ */
+function resize() {
+  const r = viewer.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false);
+  camera.aspect = r.width / r.height;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
 renderUI();
 rebuildSofa();
 renderPrice();
-updateViewer();
+resize();
+animate();
 </script>
 </body>
 </html>
